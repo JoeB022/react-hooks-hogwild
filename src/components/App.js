@@ -1,76 +1,73 @@
 import React, { useState } from "react";
-function HogForm({ addHog }) {
-    const [name, setName] = useState("");
-    const [image, setImage] = useState("");
-    const [specialty, setSpecialty] = useState("");
-    const [weight, setWeight] = useState("");
-    const [greased, setGreased] = useState(false);
-    const [highestMedal, setHighestMedal] = useState("");
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const newHog = {
-            name,
-            image,
-            specialty,
-            weight: parseFloat(weight),
-            greased,
-            "highest medal achieved": highestMedal,
-        };
-        addHog(newHog);
-        // Clear form after submission
-        setName("");
-        setImage("");
-        setSpecialty("");
-        setWeight("");
-        setGreased(false);
-        setHighestMedal("");
+import Nav from "./Nav";
+import hogs from "../porkers_data";
+import HogTile from "./HogTile";
+import HogList from "./HogList";
+
+function App() {
+    const [greasedOnly, setGreasedOnly] = useState(false);
+    const [sortOption, setSortOption] = useState("none");
+    const [hiddenHogs, setHiddenHogs] = useState([]);
+    
+    const [hogList, setHogList] = useState(hogs);
+
+    const hideHog = (hogName) => {
+        setHiddenHogs((prev) => [...prev, hogName]);
     };
+
+    const addHog = (newHog) => {
+        setHogList((prev) => [...prev, newHog]);
+    };
+
+    const filteredHogs = hogList
+        .filter((hog) => (greasedOnly ? hog.greased : true))
+        .filter((hog) => !hiddenHogs.includes(hog.name));
+
+    const sortedHogs = [...filteredHogs].sort((a, b) => {
+        if (sortOption === "name") {
+            return a.name.localeCompare(b.name);
+        } else if (sortOption === "weight") {
+            return a.weight - b.weight;
+        }
+        return 0;
+    });
+
     return (
-        <form onSubmit={handleSubmit} className="hog-form">
-            <h3>Add a New Hog</h3>
-            <input
-                type="text"
-                placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-            />
-            <input
-                type="text"
-                placeholder="Image URL"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                required
-            />
-            <input
-                type="text"
-                placeholder="Specialty"
-                value={specialty}
-                onChange={(e) => setSpecialty(e.target.value)}
-            />
-            <input
-                type="number"
-                placeholder="Weight"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                required
-            />
-            <label>
-                Greased:
-                <input
-                    type="checkbox"
-                    checked={greased}
-                    onChange={(e) => setGreased(e.target.checked)}
-                />
-            </label>
-            <input
-                type="text"
-                placeholder="Highest Medal Achieved"
-                value={highestMedal}
-                onChange={(e) => setHighestMedal(e.target.value)}
-            />
-            <button type="submit">Add Hog</button>
-        </form>
+        <div className="App">
+            <Nav />
+            <div className="navWrapper">
+                <h1 className="headerText largeHeader">Click on images for more information!</h1>
+                <div className="filterWrapper">
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={greasedOnly}
+                            onChange={() => setGreasedOnly((prev) => !prev)}
+                        />
+                        Show only greased hogs
+                    </label>
+                    <label style={{ marginLeft: "1em" }}>
+                        Sort by:
+                        <select value={sortOption} onChange={(e) => setSortOption(e.target.value)}>
+                            <option value="none">None</option>
+                            <option value="name">Name</option>
+                            <option value="weight">Weight</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+            <HogList addHog={addHog} />
+            <div className="hog-container indexWrapper">
+                {sortedHogs.map((hog) => (
+                    <HogTile
+                        key={hog.name}
+                        {...hog}
+                        hideHog={hideHog}
+                    />
+                ))}
+            </div>
+        </div>
     );
 }
-export default HogForm;
+
+export default App;
